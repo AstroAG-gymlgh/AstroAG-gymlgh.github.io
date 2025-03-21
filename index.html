@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sternbild Großer Wagen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #4FACFE;
+            --secondary-color: #00F2FE;
+            --accent-color: #7B42F6;
+            --text-color: #FFFFFF;
+            --dark-bg: #0B0E17;
+            --card-bg: rgba(16, 20, 34, 0.7);
+            --header-font: 'Orbitron', sans-serif;
+            --body-font: 'Montserrat', sans-serif;
+        }
+        
+        body, html {
+            height: 100%;
+            font-family: var(--body-font);
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        
+        /* Background - Starry Sky */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            margin: 40px auto;
+            max-width: 1200px;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-family: var(--header-font);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px rgba(79, 172, 254, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .subheading {
+            font-family: var(--header-font);
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: #E0E6F0;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: rgba(11, 14, 23, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 15px 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .nav-button {
+            background: linear-gradient(45deg, #304352, #4A5F72);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 15px;
+            font-family: var(--body-font);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(79, 172, 254, 0.3);
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        /* Content Section */
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(79, 172, 254, 0.2);
+        }
+        
+        .description {
+            text-align: left;
+        }
+        
+        .description h2 {
+            font-family: var(--header-font);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+        
+        .description p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 15px;
+            color: #E0E6F0;
+        }
+        
+        /* 3D Model Container */
+        #threeDModelContainer {
+            width: 100%;
+            height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .model-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+        
+        .model-button {
+            background: rgba(16, 20, 34, 0.7);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-family: var(--body-font);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .model-button:hover {
+            background: var(--primary-color);
+            color: #0B0E17;
+        }
+        
+        /* Information Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-top: 30px;
+        }
+        
+        .info-item {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .info-item h3 {
+            font-family: var(--header-font);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+        
+        .info-item p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #D0D8E8;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            background: rgba(11, 14, 23, 0.9);
+            padding: 30px 0;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .footer p {
+            font-size: 1.1rem;
+            color: #A0A8B8;
+        }
+        
+        .highlight {
+            color: var(--primary-color);
+        }
+        
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: fixed;
+            bottom: 50px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(16, 20, 34, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+        
+        .scroll-indicator.visible {
+            opacity: 1;
+        }
+        
+        .scroll-indicator:hover {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+        }
+        
+        .scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Star Details Table */
+        .star-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            color: #E0E6F0;
+        }
+        
+        .star-table th, .star-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .star-table th {
+            background: rgba(16, 20, 34, 0.9);
+            color: var(--secondary-color);
+            font-family: var(--header-font);
+            font-weight: 500;
+        }
+        
+        .star-table tr:hover {
+            background: rgba(79, 172, 254, 0.1);
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px 0;
+        }
+        
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--accent-color));
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+        }
+        
+        .timeline-item:nth-child(odd) {
+            left: 0;
+        }
+        
+        .timeline-item:nth-child(even) {
+            left: 50%;
+        }
+        
+        .timeline-content {
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .timeline-content h3 {
+            font-family: var(--header-font);
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        
+        .timeline-content p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            top: 20px;
+            z-index: 1;
+            box-shadow: 0 0 10px rgba(123, 66, 246, 0.7);
+        }
+        
+        .timeline-item:nth-child(odd)::after {
+            right: -10px;
+        }
+        
+        .timeline-item:nth-child(even)::after {
+            left: -10px;
+        }
+        
+        /* Constellation Comparison */
+        .comparison-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .comparison-item {
+            flex: 1 1 300px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .comparison-item h3 {
+            font-family: var(--header-font);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+        
+        .comparison-image {
+            width: 100%;
+            height: 200px;
+            background: #162033;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        /* Star Animation */
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                margin: 20px auto;
+            }
+            
+            .nav-container {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-button {
+                margin: 5px;
+            }
+            
+            #threeDModelContainer {
+                height: 350px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .description h2 {
+                font-size: 1.5rem;
+            }
+            
+            .description p {
+                font-size: 1rem;
+            }
+            
+            .timeline::after {
+                left: 31px;
+            }
+            
+            .timeline-item {
+                width: 100%;
+                padding-left: 80px;
+                padding-right: 25px;
+            }
+            
+            .timeline-item:nth-child(even) {
+                left: 0;
+            }
+            
+            .timeline-item:nth-child(odd)::after,
+            .timeline-item:nth-child(even)::after {
+                left: 22px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .subheading {
+                font-size: 0.9rem;
+            }
+            
+            #threeDModelContainer {
+                height: 250px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Cosmic Particles */
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <!-- <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2 style="font-family: 'Orbitron', sans-serif; color: #4FACFE;">Sternbild wird geladen...</h2>
+        </div>
+    </div> -->
+
+    <!-- Background with Stars -->
+    <div class="background">
+        <canvas id="starCanvas"></canvas>
+    </div>
+    
+    <!-- Cosmic Particles -->
+    <div class="particles-container" id="particlesContainer"></div>
+   
+    <!-- Header Section -->
+    <header class="header">
+        <h1>DER GROSSE WAGEN</h1>
+        <p class="subheading">Das markante Sternbild des Nordens</p>
+    </header>
+
+    <!-- Main Content -->
+    <section class="content">
+        <!-- Overview Card -->
+        <div class="card" id="overview">
+            <div class="description">
+                <h2>Was ist der Große Wagen?</h2>
+                <p>Der Große Wagen ist eine der auffälligsten und bekanntesten Sternformationen am nördlichen Nachthimmel. Er besteht aus sieben hellen Sternen, die zusammen eine Figur bilden, die an einen Wagen oder einen Schöpflöffel erinnert.</p>
+                <p>Obwohl der Große Wagen oft als eigenständiges Sternbild betrachtet wird, ist er tatsächlich nur ein Teil des größeren Sternbilds Ursa Major (Großer Bär). Die sieben Hauptsterne des Großen Wagens bilden den Schwanz und einen Teil des Körpers des Großen Bären.</p>
+                <p>Der Große Wagen ist für Himmelsbeobachter besonders wertvoll, da er leicht zu erkennen ist und als Wegweiser zu anderen Sternen und Sternbildern dient. Die beiden äußeren Sterne des "Kastens" (Dubhe und Merak) werden als "Zeigersterne" bezeichnet, da sie direkt zum Polarstern zeigen, der für die Navigation von unschätzbarem Wert ist.</p>
+            </div>
+        </div>
+
+        <!-- 3D Model Card -->
+        <div class="card" id="model">
+            <div class="description">
+                <h2>Darstellung des Großen Wagens</h2>
+                <p>Unten sehen Sie eine Darstellung des Großen Wagens.</p>
+            </div>
+            <div id="threeDModelContainer"></div>
+            <div class="model-controls">
+                <button class="model-button" id="labelBtn">Sternennamen</button>
+            </div>
+        </div>
+
+        <!-- Facts Card -->
+        <div class="card" id="facts">
+            <div class="description">
+                <h2>Wissenswertes über den Großen Wagen</h2>
+                <p>Der Große Wagen ist eines der bekanntesten Asterismen (markante Sternmuster) am Nachthimmel. Hier sind einige interessante Fakten:</p>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h3>Zirkumpolar</h3>
+                    <p>Der Große Wagen ist in den meisten Teilen der nördlichen Hemisphäre zirkumpolar, was bedeutet, dass er niemals unter den Horizont sinkt und das ganze Jahr über sichtbar bleibt.</p>
+                </div>
+                <div class="info-item">
+                    <h3>Navigation</h3>
+                    <p>Die beiden äußeren Sterne des "Kastens" - Dubhe und Merak - zeigen direkt zum Polarstern. Diese Eigenschaft macht den Großen Wagen zu einem wichtigen Navigationsinstrument seit Tausenden von Jahren.</p>
+                </div>
+                <div class="info-item">
+                    <h3>Eigenbewegung</h3>
+                    <p>Die Sterne des Großen Wagens bewegen sich tatsächlich in unterschiedliche Richtungen durch den Weltraum. In etwa 50.000 Jahren wird das bekannte Muster nicht mehr als Wagen erkennbar sein.</p>
+                </div>
+                <div class="info-item">
+                    <h3>Entfernung</h3>
+                    <p>Die Sterne des Großen Wagens sind unterschiedlich weit von der Erde entfernt. Alkaid, der Stern am Ende der "Deichsel", ist mit etwa 101 Lichtjahren am weitesten entfernt.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stars Card -->
+        <div class="card" id="stars">
+            <div class="description">
+                <h2>Die sieben Hauptsterne</h2>
+                <p>Der Große Wagen besteht aus sieben Hauptsternen, die zusammen das charakteristische Muster bilden. Hier sind Details zu jedem dieser Sterne:</p>
+            </div>
+            <table class="star-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Bayer-Bezeichnung</th>
+                        <th>Scheinbare Helligkeit</th>
+                        <th>Entfernung (Lichtjahre)</th>
+                        <th>Spektralklasse</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Dubhe</td>
+                        <td>α Ursae Majoris</td>
+                        <td>1,79</td>
+                        <td>124</td>
+                        <td>K0III</td>
+                    </tr>
+                    <tr>
+                        <td>Merak</td>
+                        <td>β Ursae Majoris</td>
+                        <td>2,37</td>
+                        <td>79</td>
+                        <td>A1V</td>
+                    </tr>
+                    <tr>
+                        <td>Phecda</td>
+                        <td>γ Ursae Majoris</td>
+                        <td>2,44</td>
+                        <td>84</td>
+                        <td>A0Ve</td>
+                    </tr>
+                    <tr>
+                        <td>Megrez</td>
+                        <td>δ Ursae Majoris</td>
+                        <td>3,31</td>
+                        <td>81</td>
+                        <td>A3V</td>
+                    </tr>
+                    <tr>
+                        <td>Alioth</td>
+                        <td>ε Ursae Majoris</td>
+                        <td>1,77</td>
+                        <td>83</td>
+                        <td>A0p</td>
+                    </tr>
+                    <tr>
+                        <td>Mizar</td>
+                        <td>ζ Ursae Majoris</td>
+                        <td>2,23</td>
+                        <td>83</td>
+                        <td>A2V</td>
+                    </tr>
+                    <tr>
+                        <td>Alkaid</td>
+                        <td>η Ursae Majoris</td>
+                        <td>1,85</td>
+                        <td>101</td>
+                        <td>B3V</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="description" style="margin-top: 20px;">
+                <p>Ein interessantes Detail ist, dass der Stern Mizar einen Begleitstern namens Alcor hat, der mit bloßem Auge sichtbar ist. Die Fähigkeit, diese beiden Sterne zu trennen, galt früher als Sehtest.</p>
+            </div>
+        </div>
+
+        <!-- History Card -->
+        <div class="card" id="history">
+            <div class="description">
+                <h2>Geschichte und Mythologie</h2>
+                <p>Der Große Wagen hat in verschiedenen Kulturen unterschiedliche Bedeutungen und Geschichten:</p>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Altes Ägypten</h3>
+                        <p>Die alten Ägypter sahen im Großen Wagen das Bein eines Stieres, das Teil ihrer Mythologie war.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Griechische Mythologie</h3>
+                        <p>In der griechischen Mythologie ist der Große Wagen Teil des Großen Bären, der mit der Nymphe Kallisto in Verbindung gebracht wird, die von Zeus geliebt und von Hera in einen Bären verwandelt wurde.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Nordische Kulturen</h3>
+                        <p>In nordischen Ländern wurde der Große Wagen oft als Thors Wagen bezeichnet.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Nordamerikanische Ureinwohner</h3>
+                        <p>Mehrere Stämme der nordamerikanischen Ureinwohner sahen die sieben Sterne als sieben Jäger oder als einen Bären, der von Jägern verfolgt wird.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
