@@ -175,6 +175,7 @@
             border-radius: 20px;
             overflow: hidden;
             position: relative;
+            background-color: rgba(11, 14, 23, 0.8);
         }
         
         .model-controls {
@@ -561,17 +562,86 @@
             border-radius: 50%;
             pointer-events: none;
         }
+
+        /* Constellation styles */
+        .constellation-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .star-label {
+            font-family: var(--header-font);
+            font-size: 14px;
+            fill: var(--text-color);
+            text-anchor: middle;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .star-point {
+            transition: r 0.3s ease, filter 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .star-point:hover {
+            filter: drop-shadow(0 0 8px var(--primary-color));
+        }
+        
+        .star-line {
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            opacity: 0.6;
+        }
+        
+        .star-animate {
+            animation: drawLine 2s forwards;
+        }
+        
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        .constellation-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(16, 20, 34, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: var(--body-font);
+            max-width: 250px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .constellation-info.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .constellation-info h3 {
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .constellation-info p {
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <!-- <div class="loading-screen" id="loadingScreen">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <h2 style="font-family: 'Orbitron', sans-serif; color: #4FACFE;">Sternbild wird geladen...</h2>
-        </div>
-    </div> -->
-
     <!-- Background with Stars -->
     <div class="background">
         <canvas id="starCanvas"></canvas>
@@ -604,9 +674,56 @@
                 <h2>Darstellung des Großen Wagens</h2>
                 <p>Unten sehen Sie eine Darstellung des Großen Wagens.</p>
             </div>
-            <div id="threeDModelContainer"></div>
+            <div id="threeDModelContainer">
+                <div class="constellation-container">
+                    <svg id="constellationSVG" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Stern-Verbindungslinien (werden animiert) -->
+                        <g id="starLines">
+                            <line class="star-line" x1="200" y1="200" x2="300" y2="220" />
+                            <line class="star-line" x1="300" y1="220" x2="380" y2="280" />
+                            <line class="star-line" x1="380" y1="280" x2="460" y2="240" />
+                            <line class="star-line" x1="460" y1="240" x2="540" y2="260" />
+                            <line class="star-line" x1="540" y1="260" x2="620" y2="280" />
+                            <line class="star-line" x1="620" y1="280" x2="680" y2="220" />
+                        </g>
+                        
+                        <!-- Sterne -->
+                        <g id="starPoints">
+                            <circle class="star-point" id="dubhe" cx="200" cy="200" r="10" fill="#ffffff" />
+                            <circle class="star-point" id="merak" cx="300" cy="220" r="8" fill="#ffffff" />
+                            <circle class="star-point" id="phecda" cx="380" cy="280" r="8" fill="#ffffff" />
+                            <circle class="star-point" id="megrez" cx="460" cy="240" r="6" fill="#ffffff" />
+                            <circle class="star-point" id="alioth" cx="540" cy="260" r="9" fill="#ffffff" />
+                            <circle class="star-point" id="mizar" cx="620" cy="280" r="7" fill="#ffffff" />
+                            <circle class="star-point" id="alkaid" cx="680" cy="220" r="8" fill="#ffffff" />
+                            
+                            <!-- Alcor (Begleitstern von Mizar) -->
+                            <circle class="star-point" id="alcor" cx="632" cy="290" r="4" fill="#ffffff" />
+                        </g>
+                        
+                        <!-- Stern-Namen -->
+                        <g id="starLabels">
+                            <text class="star-label" x="200" y="180">Dubhe</text>
+                            <text class="star-label" x="300" y="200">Merak</text>
+                            <text class="star-label" x="380" y="260">Phecda</text>
+                            <text class="star-label" x="460" y="220">Megrez</text>
+                            <text class="star-label" x="540" y="240">Alioth</text>
+                            <text class="star-label" x="620" y="260">Mizar</text>
+                            <text class="star-label" x="680" y="200">Alkaid</text>
+                            <text class="star-label" x="632" y="310">Alcor</text>
+                        </g>
+                    </svg>
+                </div>
+                
+                <div class="constellation-info" id="starInfo">
+                    <h3>Stern Info</h3>
+                    <p>Wählen Sie einen Stern für mehr Informationen.</p>
+                </div>
+            </div>
             <div class="model-controls">
                 <button class="model-button" id="labelBtn">Sternennamen</button>
+                <button class="model-button" id="rotateBtn">Rotieren</button>
+                <button class="model-button" id="resetBtn">Zurücksetzen</button>
             </div>
         </div>
 
